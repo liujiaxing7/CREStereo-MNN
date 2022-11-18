@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     const std::vector<std::string> input_names{"left", "right"};
     const std::vector<std::string> output_names{"output"};
 
-    MNNForwardType type = MNN_FORWARD_OPENCL;
+    MNNForwardType type = MNN_FORWARD_CUDA;
     MNN::BackendConfig backend_config;    // default backend config
     int precision = MNN::BackendConfig::PrecisionMode::Precision_Normal;
     backend_config.precision = static_cast<MNN::BackendConfig::PrecisionMode>(precision);
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 //        cv::waitKey();
 //        std::cout << "load images success" << std::endl;
 
-        //data to gpu
+        //data to gpu time
         float data_to_gpu = 0;
         struct timeval data_gpu_start;
         struct timeval data_gpu_end;
@@ -123,6 +123,7 @@ int main(int argc, char **argv) {
         forward_time_use=(forward_end.tv_sec-forward_start.tv_sec)*1000000+(forward_end.tv_usec-forward_start.tv_usec);
         std::cout<<"forward time : "<<forward_time_use<<std::endl;
 
+        //data to cpu time
         float data_to_cpu = 0;
         struct timeval data_cpu_start;
         struct timeval data_cpu_end;
