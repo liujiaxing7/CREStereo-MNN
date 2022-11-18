@@ -123,60 +123,60 @@ int main(int argc, char **argv) {
         forward_time_use=(forward_end.tv_sec-forward_start.tv_sec)*1000000+(forward_end.tv_usec-forward_start.tv_usec);
         std::cout<<"forward time : "<<forward_time_use<<std::endl;
 
-//        float data_to_cpu = 0;
-//        struct timeval data_cpu_start;
-//        struct timeval data_cpu_end;
-//        gettimeofday(&data_cpu_start,NULL);
-//
-//        auto output = MNN::Express::_Convert(outputs[0], MNN::Express::NHWC);
-//        output = MNN::Express::_Reshape(output, {2, 240, 320});
-//        auto value = output->readMap<float>();
-//
-//        gettimeofday(&data_cpu_end,NULL);
-//        data_to_cpu=(data_cpu_end.tv_sec-data_cpu_start.tv_sec)*1000000+(data_cpu_end.tv_usec-data_cpu_start.tv_usec);
-//        std::cout<<"data_to_cpu time : "<<data_to_cpu<<std::endl;
-//
-//        //output赋值给mat
-//        int outSize_w = w;
-//        int outSize_h = h;
-//        cv::Mat outimg;
-//        outimg.create(cv::Size(outSize_w, outSize_h), CV_32FC1);
-//
-//        cv::Mat showImg;
-//
-//        for (int i=0; i<outSize_h; ++i) {
-//            {
-//                for (int j=0; j<outSize_w; ++j)
-//                {
-//                    outimg.at<float>(i,j) = value[(i*outSize_w+j)*2];
-//                }
-//            }
-//        }
-//
-//        //可视化
-//        double minv = 0.0, maxv = 0.0;
-//        double* minp = &minv;
-//        double* maxp = &maxv;
-//        minMaxIdx(outimg,minp,maxp);
-//        float minvalue = (float)minv;
-//        float maxvalue = (float)maxv;
-//
-//        for (int i=0; i<outSize_h; ++i) {
-//            {
-//                for (int j=0; j<outSize_w; ++j)
-//                {
-//
-//                    outimg.at<float>(i,j) = 255* (outimg.at<float>(i,j) - minvalue)/(maxvalue-minvalue);
-//                }
-//            }
-//        }
-//
-//        outimg.convertTo(showImg,CV_8U);
-//        namedWindow("image", cv::WINDOW_AUTOSIZE);
-//        imshow("image", showImg);
+        float data_to_cpu = 0;
+        struct timeval data_cpu_start;
+        struct timeval data_cpu_end;
+        gettimeofday(&data_cpu_start,NULL);
+
+        auto output = MNN::Express::_Convert(outputs[0], MNN::Express::NHWC);
+        output = MNN::Express::_Reshape(output, {2, 240, 320});
+        auto value = output->readMap<float>();
+
+        gettimeofday(&data_cpu_end,NULL);
+        data_to_cpu=(data_cpu_end.tv_sec-data_cpu_start.tv_sec)*1000000+(data_cpu_end.tv_usec-data_cpu_start.tv_usec);
+        std::cout<<"data_to_cpu time : "<<data_to_cpu<<std::endl;
+
+        //output赋值给mat
+        int outSize_w = w;
+        int outSize_h = h;
+        cv::Mat outimg;
+        outimg.create(cv::Size(outSize_w, outSize_h), CV_32FC1);
+
+        cv::Mat showImg;
+
+        for (int i=0; i<outSize_h; ++i) {
+            {
+                for (int j=0; j<outSize_w; ++j)
+                {
+                    outimg.at<float>(i,j) = value[(i*outSize_w+j)*2];
+                }
+            }
+        }
+
+        //可视化
+        double minv = 0.0, maxv = 0.0;
+        double* minp = &minv;
+        double* maxp = &maxv;
+        minMaxIdx(outimg,minp,maxp);
+        float minvalue = (float)minv;
+        float maxvalue = (float)maxv;
+
+        for (int i=0; i<outSize_h; ++i) {
+            {
+                for (int j=0; j<outSize_w; ++j)
+                {
+
+                    outimg.at<float>(i,j) = 255* (outimg.at<float>(i,j) - minvalue)/(maxvalue-minvalue);
+                }
+            }
+        }
+
+        outimg.convertTo(showImg,CV_8U);
+        namedWindow("image", cv::WINDOW_AUTOSIZE);
+        imshow("image", showImg);
 //        cv::waitKey(0);
-//
-//        std::cout << "success" << std::endl;
+
+        std::cout << "success" << std::endl;
     }
     return 0;
 }
