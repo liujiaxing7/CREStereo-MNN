@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     const std::vector<std::string> input_names{"left", "right"};
     const std::vector<std::string> output_names{"output"};
 
-    MNNForwardType type = MNN_FORWARD_CUDA;
+    MNNForwardType type = MNN_FORWARD_CPU;
     MNN::BackendConfig backend_config;    // default backend config
     int precision = MNN::BackendConfig::PrecisionMode::Precision_Normal;
     backend_config.precision = static_cast<MNN::BackendConfig::PrecisionMode>(precision);
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
         auto imageL = stbi_load(imgL.c_str(), &width, &height, &channel, outbpp);
         auto imageR = stbi_load(imgR.c_str(), &width, &height, &channel, outbpp);
 
-//        cv::Mat gray1_mat(375, 450, CV_8UC3, imageR);
+//        cv::Mat gray1_mat(h, w, CV_8UC3, imageR);
 //        imshow("去雾图像显示", gray1_mat);
 //        cv::waitKey();
 //        std::cout << "load images success" << std::endl;
@@ -91,8 +91,8 @@ int main(int argc, char **argv) {
 
         MNN::CV::ImageProcess::Config config;
         config.filterType = MNN::CV::BILINEAR;
-        config.sourceFormat = MNN::CV::RGBA;
-        config.destFormat = MNN::CV::BGR;
+//        config.sourceFormat = MNN::CV::GRAY;
+//        config.destFormat = MNN::CV::BGR;
 
         std::shared_ptr<MNN::CV::ImageProcess> pretreat(MNN::CV::ImageProcess::create(config));
         pretreat->setMatrix(trans);
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
         gettimeofday(&data_cpu_start,NULL);
 
         auto output = MNN::Express::_Convert(outputs[0], MNN::Express::NHWC);
-        output = MNN::Express::_Reshape(output, {2, 240, 320});
+        output = MNN::Express::_Reshape(output, {2, h, w});
         auto value = output->readMap<float>();
 
         gettimeofday(&data_cpu_end,NULL);
@@ -173,9 +173,14 @@ int main(int argc, char **argv) {
         }
 
         outimg.convertTo(showImg,CV_8U);
+        cv::Mat colorimg;
+        cv::Mat colorimgfinal;
+//        cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map,1), cv2.COLORMAP_MAGMA)
+        cv::convertScaleAbs(showImg,colorimg);
+        cv::applyColorMap(colorimg,colorimgfinal,cv::COLORMAP_PARULA);
         namedWindow("image", cv::WINDOW_AUTOSIZE);
-        imshow("image", showImg);
-//        cv::waitKey(0);
+        imshow("image", colorimgfinal);
+        cv::waitKey(0);
 
         std::cout << "success" << std::endl;
     }

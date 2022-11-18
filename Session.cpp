@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     MNN::BackendConfig backendConfig;
     backendConfig.precision = (MNN::BackendConfig::PrecisionMode) 2;
     config.backendConfig = &backendConfig;
-    int forward = MNN_FORWARD_CUDA;
+    int forward = MNN_FORWARD_OPENCL;
     config.type = static_cast<MNNForwardType>(forward);
 
     // create session
