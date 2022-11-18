@@ -1,0 +1,18 @@
+*.user
+### VSCode
+.vscode/
+.tags/
+
+
+build*/
+model/
+.idea/
+.nn_sdk.h.swp
+build/
+install/
+sample/*.txt
+cmake-build-debug/
+cmake-build-debug-show/
+cmake-build-debug-yuang/
+*.gpu
+*.npu

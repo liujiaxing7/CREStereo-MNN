@@ -4,14 +4,11 @@
 #include <iostream>
 #include "utils.h"
 #include "string.h"
-#include "Interpreter.hpp"
 #include <opencv2/highgui.hpp>
-#include <opencv2/opencv.hpp>
 #include <ImageProcess.hpp>
 #include <MNN/expr/Module.hpp>
 #include <MNN/expr/ExprCreator.hpp>
 #include <MNN/expr/Expr.hpp>
-
 
 #define STB_IMAGE_IMPLEMENTATION
 //#define STBI_NO_STDIO
@@ -27,9 +24,6 @@ int main(int argc, char **argv) {
     }
 
     const std::string mnn_path = argv[1];
-
-//    const std::vector<std::string> input_names{"input.1", "input.401"};
-//    const std::vector<std::string> output_names{"16382"};
 
     const std::vector<std::string> input_names{"left", "right"};
     const std::vector<std::string> output_names{"output"};
@@ -50,18 +44,13 @@ int main(int argc, char **argv) {
 //            MNN::Express::Module::load(input_names, output_names, mnn_path.c_str(),rtmgr,  &mConfig));
     std::unique_ptr<MNN::Express::Module> module;
     module.reset(MNN::Express::Module::load(input_names, output_names, mnn_path.c_str(), &mConfig));
-
-    auto info = module->getInfo();
+//    auto info = module->getInfo();
 
 
     std::string imagespath = argv[2];
-
     std::vector<std::string> limg;
     std::vector<std::string> rimg;
-
-
     ReadImages(imagespath, limg, rimg);
-
 
     for (size_t i = 0; i < limg.size(); ++i) {
 
@@ -75,17 +64,14 @@ int main(int argc, char **argv) {
         auto imgL = limg.at(i);
         auto imgR = rimg.at(i);
 
-
         int width, height, channel;
         auto imageL = stbi_load(imgL.c_str(), &width, &height, &channel, 4);
         auto imageR = stbi_load(imgR.c_str(), &width, &height, &channel, 4);
-
 
 //        cv::Mat gray1_mat(375, 450, CV_8UC3, imageR);
 //        imshow("去雾图像显示", gray1_mat);
 //        cv::waitKey();
 //        std::cout << "load images success" << std::endl;
-
 
         MNN::CV::Matrix trans;
         trans.setScale((float)(width-1) / (w-1), (float)(height-1) / (h-1));
@@ -97,32 +83,22 @@ int main(int argc, char **argv) {
 
         std::shared_ptr<MNN::CV::ImageProcess> pretreat(MNN::CV::ImageProcess::create(config));
         pretreat->setMatrix(trans);
-
         pretreat->convert((uint8_t *) imageL, width, height, 0, inputLeft->writeMap<float>() + 0 * 4 * w * h , w, h,
                           4, 0, halide_type_of<float>());
+        stbi_image_free(imageL);
 
         std::shared_ptr<MNN::CV::ImageProcess> pretreat1(MNN::CV::ImageProcess::create(config));
         pretreat1->setMatrix(trans);
-
-
         pretreat1->convert((uint8_t *) imageR, width, height, 0, inputRight->writeMap<float>() + 0 * 4 * w * h , w, h,
                           4, 0, halide_type_of<float>());
-
-
-
-
+        stbi_image_free(imageR);
 
         std::cout << "forward" << std::endl;
-//        inputLeft->resize({1, 3, 240,320});
-//        inputRight->resize({1, 3, 240,320});
-
-
         MNN::Express::Executor::getGlobalExecutor()->resetProfile();
         auto outputs = module->onForward({inputLeft, inputRight});
         auto output = MNN::Express::_Convert(outputs[0], MNN::Express::NHWC);
         output = MNN::Express::_Reshape(output, {2, 240, 320});
         auto value = output->readMap<float>();
-
 
         //output赋值给mat
         int outSize_w = 320;
@@ -162,14 +138,8 @@ int main(int argc, char **argv) {
         outimg.convertTo(showImg,CV_8U);
         namedWindow("image", cv::WINDOW_AUTOSIZE);
         imshow("image", showImg);
-        cv::waitKey(0);
-
-//        cv::Mat saveImg;
-//        showImg.convertTo(saveImg,CV_8UC4);
-//        cv::imwrite("a.png", saveImg);
 
         std::cout << "success" << std::endl;
-
     }
     return 0;
 }
