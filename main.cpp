@@ -68,13 +68,9 @@ int main(int argc, char **argv) {
         int w = 320;
         int h = 240;
         int c = 3;
-//        std::vector<MNN::Express::VARP> inputs(2);
-//        inputs[0] =  MNN::Express::_Input({1, 3, 400, 640}, MNN::Express::NC4HW4);
-//        inputs[1] =  MNN::Express::_Input({1, 3, 400, 640}, MNN::Express::NC4HW4);
-        auto inputLeft = MNN::Express::_Input({1, 3, h, w}, MNN::Express::NC4HW4, halide_type_of<float>());
 
+        auto inputLeft = MNN::Express::_Input({1, 3, h, w}, MNN::Express::NC4HW4, halide_type_of<float>());
         auto inputRight = MNN::Express::_Input({1, 3, h, w}, MNN::Express::NC4HW4, halide_type_of<float>());
-        //auto other = MNN::Express::_Input({1, 3, 400, 640}, MNN::Express::NC4HW4);
 
         auto imgL = limg.at(i);
         auto imgR = rimg.at(i);
@@ -84,26 +80,20 @@ int main(int argc, char **argv) {
         auto imageL = stbi_load(imgL.c_str(), &width, &height, &channel, 4);
         auto imageR = stbi_load(imgR.c_str(), &width, &height, &channel, 4);
 
-        //std::cout<<imageR<<std::endl;
-//        cv::Mat gray1_mat(400, 640, CV_8UC3, imageR);
+
+//        cv::Mat gray1_mat(375, 450, CV_8UC3, imageR);
 //        imshow("去雾图像显示", gray1_mat);
 //        cv::waitKey();
+//        std::cout << "load images success" << std::endl;
 
-        std::cout << "read images" << std::endl;
-
-//
 
         MNN::CV::Matrix trans;
         trans.setScale((float)(width-1) / (w-1), (float)(height-1) / (h-1));
 
         MNN::CV::ImageProcess::Config config;
         config.filterType = MNN::CV::BILINEAR;
-
-//        float mean[3] = {103.94f, 116.78f, 123.68f};
-//        float normals[3] = {0.017f, 0.017f, 0.017f};
-
-//        ::memcpy(config.mean, mean, sizeof(mean));
-//        ::memcpy(config.normal, normals, sizeof(mean));
+        config.sourceFormat = MNN::CV::RGBA;
+        config.destFormat = MNN::CV::BGR;
 
         std::shared_ptr<MNN::CV::ImageProcess> pretreat(MNN::CV::ImageProcess::create(config));
         pretreat->setMatrix(trans);
@@ -118,42 +108,40 @@ int main(int argc, char **argv) {
         pretreat1->convert((uint8_t *) imageR, width, height, 0, inputRight->writeMap<float>() + 0 * 4 * w * h , w, h,
                           4, 0, halide_type_of<float>());
 
+
+
+
+
         std::cout << "forward" << std::endl;
-//        inputLeft->resize({1, 3, 400,640});
+//        inputLeft->resize({1, 3, 240,320});
+//        inputRight->resize({1, 3, 240,320});
 
-//
+
         MNN::Express::Executor::getGlobalExecutor()->resetProfile();
-
         auto outputs = module->onForward({inputLeft, inputRight});
         auto output = MNN::Express::_Convert(outputs[0], MNN::Express::NHWC);
         output = MNN::Express::_Reshape(output, {2, 240, 320});
-        int topK = 2* w*h;
-//        auto topKV = MNN::Express::_TopKV2(output, MNN::Express::_Scalar<float>(topK));
         auto value = output->readMap<float>();
-//        auto indice = topKV[1]->readMap<int>();
 
-//        std::vector<float> outimg;
+
+        //output赋值给mat
+        int outSize_w = 320;
+        int outSize_h = 240;
         cv::Mat outimg;
-        outimg.create(cv::Size(w, h), CV_32FC1);
+        outimg.create(cv::Size(outSize_w, outSize_h), CV_32FC1);
 
         cv::Mat showImg;
 
-
-        for (int i=0; i<h; ++i) {
+        for (int i=0; i<outSize_h; ++i) {
             {
-                for (int j=0; j<w; ++j)
+                for (int j=0; j<outSize_w; ++j)
                 {
-                    std::cout<<value[i*h+j]<<std::endl;
-                    outimg.at<float>(i,j) = value[i*w+j];
+                    outimg.at<float>(i,j) = value[i*outSize_w+j];
                 }
             }
         }
 
-//        outimg.convertTo(showImg,CV_8U);
-//        cv::namedWindow(
-//                "MyWindow"
-//                , CV_WINDOW_AUTOSIZE);
-
+        //可视化
         double minv = 0.0, maxv = 0.0;
         double* minp = &minv;
         double* maxp = &maxv;
@@ -161,9 +149,9 @@ int main(int argc, char **argv) {
         float minvalue = (float)minv;
         float maxvalue = (float)maxv;
 
-        for (int i=0; i<h; ++i) {
+        for (int i=0; i<outSize_h; ++i) {
             {
-                for (int j=0; j<w; ++j)
+                for (int j=0; j<outSize_w; ++j)
                 {
 
                     outimg.at<float>(i,j) = 255* (outimg.at<float>(i,j) - minvalue)/(maxvalue-minvalue);
@@ -171,37 +159,15 @@ int main(int argc, char **argv) {
             }
         }
 
+        outimg.convertTo(showImg,CV_8U);
         namedWindow("image", cv::WINDOW_AUTOSIZE);
-        imshow("image", outimg);
+        imshow("image", showImg);
         cv::waitKey(0);
-//        cv::imwrite("./a.png", outimg);
-//        imshow(
-//                "MyWindow"
-//                , showImg);
-//        cv::waitKey(0);
-//
-//        cv::destroyWindow(
-//                "MyWindow"
-//        );
 
-//
-//        std::cout<<outimg<<std::endl;
-//        cv::Mat depthimg;
-//
-//        vector_to_mat(outimg,depthimg,320,240);
+//        cv::Mat saveImg;
+//        showImg.convertTo(saveImg,CV_8UC4);
+//        cv::imwrite("a.png", saveImg);
 
-
-//        std::vector<float> outimg;
-////        for (int batch = 0; batch < 1; ++batch) {
-////            MNN_PRINT("For Input: %s \n", argv[batch+2]);
-//        for (int i=0; i<topK; ++i) {
-//            MNN_PRINT(" %f\n", value[0,0,topK + i]);
-//            outimg.push_back(value[topK + i]);
-//        }
-////        }
-
-        std::cout<<"final"<<std::endl;
-//        MNN::Express::Executor::getGlobalExecutor()->dumpProfile();
         std::cout << "success" << std::endl;
 
     }
