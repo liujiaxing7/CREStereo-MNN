@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
             {
                 for (int j=0; j<outSize_w; ++j)
                 {
-                    outimg.at<float>(i,j) = value[i*outSize_w+j];
+                    outimg.at<float>(i,j) = value[(i*outSize_w+j)*2];
                 }
             }
         }
