@@ -15,6 +15,11 @@ int main(int argc, char **argv) {
                   << "output_path:: output_dir" << std::endl;
         return -1;
     }
+    //计算加载时间
+    float load_time_use = 0;
+    struct timeval load_start;
+    struct timeval load_end;
+    gettimeofday(&load_start,NULL);
 
     const std::string mnn_path = argv[1];
     std::shared_ptr<MNN::Interpreter> my_interpreter = std::shared_ptr<MNN::Interpreter>(
@@ -24,6 +29,7 @@ int main(int argc, char **argv) {
     MNN::ScheduleConfig config;
     int num_thread = 4;
     config.numThread = num_thread;
+//    config.mode = MNN_GPU_TUNING_NONE;
     MNN::BackendConfig backendConfig;
     backendConfig.precision = (MNN::BackendConfig::PrecisionMode) 2;
     config.backendConfig = &backendConfig;
@@ -33,6 +39,10 @@ int main(int argc, char **argv) {
     // create session
     MNN::Session *my_session = my_interpreter->createSession(config);
     my_interpreter->releaseModel();
+
+    gettimeofday(&load_end,NULL);
+    load_time_use=(load_end.tv_sec-load_start.tv_sec)*1000000+(load_end.tv_usec-load_start.tv_usec);
+    std::cout<<"load model time : "<<load_time_use/1000.0<<"ms"<<std::endl;
 
     int w = 320;
     int h = 240;
@@ -69,10 +79,20 @@ int main(int argc, char **argv) {
         const float mean_vals[3] = {0.485, 0.456, 0.406};
         const float norm_vals[3] = {0.229, 0.224, 0.225};
 
+        //data to gpu time
+        float data_to_gpu = 0;
+        struct timeval data_gpu_start;
+        struct timeval data_gpu_end;
+        gettimeofday(&data_gpu_start,NULL);
         std::shared_ptr<MNN::CV::ImageProcess> pretreat(
         MNN::CV::ImageProcess::create(MNN::CV::RGB, MNN::CV::RGB));
         pretreat->convert(imageL.data, w, h, imageL.step[0], input_tensorL);
         pretreat->convert(imageR.data, w, h, imageR.step[0], input_tensorR);
+
+        gettimeofday(&data_gpu_end,NULL);
+        data_to_gpu=(data_gpu_end.tv_sec-data_gpu_start.tv_sec)*1000000+(data_gpu_end.tv_usec-data_gpu_start.tv_usec);
+        std::cout<<"data_to_gpu time : "<<data_to_gpu/1000.0<<"ms"<<std::endl;
+
 
         float forward_time_use = 0;
         struct timeval forward_start;
@@ -81,16 +101,24 @@ int main(int argc, char **argv) {
 
         my_interpreter->runSession(my_session);
 
+        gettimeofday(&forward_end,NULL);
+        forward_time_use=(forward_end.tv_sec-forward_start.tv_sec)*1000000+(forward_end.tv_usec-forward_start.tv_usec);
+        std::cout<<"forward time : "<<forward_time_use/1000.0<<"ms"<<std::endl;
+
+        float data_to_cpu = 0;
+        struct timeval data_cpu_start;
+        struct timeval data_cpu_end;
+        gettimeofday(&data_cpu_start,NULL);
+
         auto output = my_interpreter->getSessionOutput(my_session, "output");
         auto t_host = new MNN::Tensor(output, MNN::Tensor::CAFFE);
         output->copyToHostTensor(t_host);
 
-        gettimeofday(&forward_end,NULL);
-        forward_time_use=(forward_end.tv_sec-forward_start.tv_sec)*1000000+(forward_end.tv_usec-forward_start.tv_usec);
-        std::cout<<"forward time : "<<forward_time_use<<std::endl;
-
         float *output_array_boxes = t_host->host<float>();
 
+        gettimeofday(&data_cpu_end,NULL);
+        data_to_cpu=(data_cpu_end.tv_sec-data_cpu_start.tv_sec)*1000000+(data_cpu_end.tv_usec-data_cpu_start.tv_usec);
+        std::cout<<"data_to_cpu time : "<<data_to_cpu/1000.0<<"ms"<<std::endl;
 //        std::vector<float> output_vector_boxes{output_array_boxes, output_array_boxes + 400};
 //        std::cout<<"get output"<<std::endl;
 //        for (int i = 0; i<400; ++i)

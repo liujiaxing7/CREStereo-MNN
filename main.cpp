@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     const std::vector<std::string> input_names{"left", "right"};
     const std::vector<std::string> output_names{"output"};
 
-    MNNForwardType type = MNN_FORWARD_CPU;
+    MNNForwardType type = MNN_FORWARD_OPENCL;
     MNN::BackendConfig backend_config;    // default backend config
     int precision = MNN::BackendConfig::PrecisionMode::Precision_Normal;
     backend_config.precision = static_cast<MNN::BackendConfig::PrecisionMode>(precision);
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
     gettimeofday(&load_end,NULL);
     load_time_use=(load_end.tv_sec-load_start.tv_sec)*1000000+(load_end.tv_usec-load_start.tv_usec);
-    std::cout<<"load model time : "<<load_time_use<<std::endl;
+    std::cout<<"load model time : "<<load_time_use/1000.0<<"ms"<<std::endl;
 
     std::string imagespath = argv[2];
     std::vector<std::string> limg;
@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 
         gettimeofday(&data_gpu_end,NULL);
         data_to_gpu=(data_gpu_end.tv_sec-data_gpu_start.tv_sec)*1000000+(data_gpu_end.tv_usec-data_gpu_start.tv_usec);
-        std::cout<<"data_to_gpu time : "<<data_to_gpu<<std::endl;
+        std::cout<<"data_to_gpu time : "<<data_to_gpu/1000.0<<"ms"<<std::endl;
 
         //计算forward时间
         float forward_time_use = 0;
@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 
         gettimeofday(&forward_end,NULL);
         forward_time_use=(forward_end.tv_sec-forward_start.tv_sec)*1000000+(forward_end.tv_usec-forward_start.tv_usec);
-        std::cout<<"forward time : "<<forward_time_use<<std::endl;
+        std::cout<<"forward time : "<<forward_time_use/1000.0<<"ms"<<std::endl;
 
         //data to cpu time
         float data_to_cpu = 0;
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 
         gettimeofday(&data_cpu_end,NULL);
         data_to_cpu=(data_cpu_end.tv_sec-data_cpu_start.tv_sec)*1000000+(data_cpu_end.tv_usec-data_cpu_start.tv_usec);
-        std::cout<<"data_to_cpu time : "<<data_to_cpu<<std::endl;
+        std::cout<<"data_to_cpu time : "<<data_to_cpu/1000.0<<"ms"<<std::endl;
 
         //output赋值给mat
         int outSize_w = w;
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
         cv::applyColorMap(colorimg,colorimgfinal,cv::COLORMAP_PARULA);
         namedWindow("image", cv::WINDOW_AUTOSIZE);
         imshow("image", colorimgfinal);
-        cv::waitKey(0);
+//        cv::waitKey(0);
 
         std::cout << "success" << std::endl;
     }
