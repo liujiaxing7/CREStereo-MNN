@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
         cv::applyColorMap(colorimg,colorimgfinal,cv::COLORMAP_PARULA);
         namedWindow("image", cv::WINDOW_AUTOSIZE);
         imshow("image", colorimgfinal);
-        cv::waitKey(0);
+//        cv::waitKey(0);
 
         std::cout << "success" << std::endl;
     }
