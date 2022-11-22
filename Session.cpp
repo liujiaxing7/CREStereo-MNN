@@ -111,21 +111,63 @@ int main(int argc, char **argv) {
         gettimeofday(&data_cpu_start,NULL);
 
         auto output = my_interpreter->getSessionOutput(my_session, "output");
+//        output = MNN::Express::_Reshape(output, {2, h, w});
         auto t_host = new MNN::Tensor(output, MNN::Tensor::CAFFE);
+
         output->copyToHostTensor(t_host);
 
-        float *output_array_boxes = t_host->host<float>();
+
+        float *value = t_host->host<float>();
 
         gettimeofday(&data_cpu_end,NULL);
         data_to_cpu=(data_cpu_end.tv_sec-data_cpu_start.tv_sec)*1000000+(data_cpu_end.tv_usec-data_cpu_start.tv_usec);
         std::cout<<"data_to_cpu time : "<<data_to_cpu/1000.0<<"ms"<<std::endl;
-//        std::vector<float> output_vector_boxes{output_array_boxes, output_array_boxes + 400};
-//        std::cout<<"get output"<<std::endl;
-//        for (int i = 0; i<400; ++i)
-//        {
-//            std::cout<<output_vector_boxes.at(i)<<std::endl;
-//        }
-//        std::cout<<"output:"<<output_array_boxes<<std::endl;
+        //output赋值给mat
+        int outSize_w = w;
+        int outSize_h = h;
+        cv::Mat outimg;
+        outimg.create(cv::Size(outSize_w, outSize_h), CV_32FC1);
+
+        cv::Mat showImg;
+
+        for (int i=0; i<outSize_h; ++i) {
+            {
+                for (int j=0; j<outSize_w; ++j)
+                {
+                    outimg.at<float>(i,j) = value[i*outSize_w+j];
+                }
+            }
+        }
+
+        //可视化
+        double minv = 0.0, maxv = 0.0;
+        double* minp = &minv;
+        double* maxp = &maxv;
+        minMaxIdx(outimg,minp,maxp);
+        float minvalue = (float)minv;
+        float maxvalue = (float)maxv;
+
+        for (int i=0; i<outSize_h; ++i) {
+            {
+                for (int j=0; j<outSize_w; ++j)
+                {
+
+                    outimg.at<float>(i,j) = 255* (outimg.at<float>(i,j) - minvalue)/(maxvalue-minvalue);
+                }
+            }
+        }
+
+        outimg.convertTo(showImg,CV_8U);
+        cv::Mat colorimg;
+        cv::Mat colorimgfinal;
+//        cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map,1), cv2.COLORMAP_MAGMA)
+        cv::convertScaleAbs(showImg,colorimg);
+        cv::applyColorMap(colorimg,colorimgfinal,cv::COLORMAP_PARULA);
+        namedWindow("image", cv::WINDOW_AUTOSIZE);
+        imshow("image", colorimgfinal);
+        cv::waitKey(0);
+
+        std::cout << "success" << std::endl;
     }
 
 

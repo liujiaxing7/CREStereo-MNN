@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 
     gettimeofday(&load_end,NULL);
     load_time_use=(load_end.tv_sec-load_start.tv_sec)*1000000+(load_end.tv_usec-load_start.tv_usec);
-    std::cout<<"load model time : "<<load_time_use<<std::endl;
+    std::cout<<"load model time : "<<load_time_use/1000.0<<"ms"<<std::endl;
 
 
     float load_time_use_fuse = 0;
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 
     gettimeofday(&load_end_fuse,NULL);
     load_time_use_fuse=(load_end_fuse.tv_sec-load_start_fuse.tv_sec)*1000000+(load_end_fuse.tv_usec-load_start_fuse.tv_usec);
-    std::cout<<"second model time : "<<load_time_use_fuse<<std::endl;
+    std::cout<<"second model time : "<<load_time_use_fuse/1000.0<<"ms"<<std::endl;
 
     auto info = module->getInfo();
 
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
 
         gettimeofday(&forward_end,NULL);
         forward_time_use=(forward_end.tv_sec-forward_start.tv_sec)*1000000+(forward_end.tv_usec-forward_start.tv_usec);
-        std::cout<<"first part forward time : "<<forward_time_use<<std::endl;
+        std::cout<<"first part forward time : "<<forward_time_use/1000.0<<"ms"<<std::endl;
 
         float forward_time_last = 0;
         struct timeval forward_start_last;
@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
 
         gettimeofday(&forward_end_last,NULL);
         forward_time_last=(forward_end_last.tv_sec-forward_start_last.tv_sec)*1000000+(forward_end_last.tv_usec-forward_start_last.tv_usec);
-        std::cout<<"last part forward time : "<<forward_time_last<<std::endl;
+        std::cout<<"last part forward time : "<<forward_time_last/1000.0<<"ms"<<std::endl;
 
 
 
